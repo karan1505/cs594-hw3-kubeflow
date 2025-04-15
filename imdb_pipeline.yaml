@@ -1,0 +1,167 @@
+# PIPELINE DEFINITION
+# Name: imdb-ml-pipeline
+# Description: Pipeline using YAML component defs
+components:
+  comp-evaluate-model:
+    executorLabel: exec-evaluate-model
+    inputDefinitions:
+      parameters:
+        features_csv:
+          parameterType: STRING
+        labels_csv:
+          parameterType: STRING
+        model_path:
+          parameterType: STRING
+  comp-feature-engineering:
+    executorLabel: exec-feature-engineering
+    inputDefinitions:
+      parameters:
+        input_csv_path:
+          parameterType: STRING
+        output_features_path:
+          parameterType: STRING
+        output_labels_path:
+          parameterType: STRING
+  comp-load-and-clean-data:
+    executorLabel: exec-load-and-clean-data
+    inputDefinitions:
+      parameters:
+        input_csv_path:
+          parameterType: STRING
+        output_csv_path:
+          parameterType: STRING
+  comp-train-model:
+    executorLabel: exec-train-model
+    inputDefinitions:
+      parameters:
+        features_csv:
+          parameterType: STRING
+        labels_csv:
+          parameterType: STRING
+        model_output_path:
+          parameterType: STRING
+deploymentSpec:
+  executors:
+    exec-evaluate-model:
+      container:
+        command:
+        - python3
+        - pipeline_components/evaluate_model.py
+        - --features_csv
+        - '{{$.inputs.parameters[''features_csv'']}}'
+        - --labels_csv
+        - '{{$.inputs.parameters[''labels_csv'']}}'
+        - --model_path
+        - '{{$.inputs.parameters[''model_path'']}}'
+        image: python:3.10
+    exec-feature-engineering:
+      container:
+        command:
+        - python3
+        - pipeline_components/feature_engineer.py
+        - --input_csv_path
+        - '{{$.inputs.parameters[''input_csv_path'']}}'
+        - --output_features_path
+        - '{{$.inputs.parameters[''output_features_path'']}}'
+        - --output_labels_path
+        - '{{$.inputs.parameters[''output_labels_path'']}}'
+        image: python:3.10
+    exec-load-and-clean-data:
+      container:
+        command:
+        - python3
+        - pipeline_components/load_and_clean.py
+        - --input_csv_path
+        - '{{$.inputs.parameters[''input_csv_path'']}}'
+        - --output_csv_path
+        - '{{$.inputs.parameters[''output_csv_path'']}}'
+        image: python:3.10
+    exec-train-model:
+      container:
+        command:
+        - python3
+        - pipeline_components/train_model.py
+        - --features_csv
+        - '{{$.inputs.parameters[''features_csv'']}}'
+        - --labels_csv
+        - '{{$.inputs.parameters[''labels_csv'']}}'
+        - --model_output_path
+        - '{{$.inputs.parameters[''model_output_path'']}}'
+        image: python:3.10
+pipelineInfo:
+  description: Pipeline using YAML component defs
+  name: imdb-ml-pipeline
+root:
+  dag:
+    tasks:
+      evaluate-model:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-evaluate-model
+        inputs:
+          parameters:
+            features_csv:
+              runtimeValue:
+                constant: data/features.csv
+            labels_csv:
+              runtimeValue:
+                constant: data/labels.csv
+            model_path:
+              runtimeValue:
+                constant: model/rf_model.pkl
+        taskInfo:
+          name: evaluate-model
+      feature-engineering:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-feature-engineering
+        inputs:
+          parameters:
+            input_csv_path:
+              runtimeValue:
+                constant: data/imdb_cleaned.csv
+            output_features_path:
+              runtimeValue:
+                constant: data/features.csv
+            output_labels_path:
+              runtimeValue:
+                constant: data/labels.csv
+        taskInfo:
+          name: feature-engineering
+      load-and-clean-data:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-load-and-clean-data
+        inputs:
+          parameters:
+            input_csv_path:
+              runtimeValue:
+                constant: data/imdb_top_1000.csv
+            output_csv_path:
+              runtimeValue:
+                constant: data/imdb_cleaned.csv
+        taskInfo:
+          name: load-and-clean-data
+      train-model:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-train-model
+        inputs:
+          parameters:
+            features_csv:
+              runtimeValue:
+                constant: data/features.csv
+            labels_csv:
+              runtimeValue:
+                constant: data/labels.csv
+            model_output_path:
+              runtimeValue:
+                constant: model/rf_model.pkl
+        taskInfo:
+          name: train-model
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.12.1

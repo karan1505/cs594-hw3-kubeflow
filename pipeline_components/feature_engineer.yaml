@@ -1,0 +1,19 @@
+name: Feature Engineering
+description: Processes cleaned data to generate features and labels
+inputs:
+- name: input_csv_path
+  type: String
+- name: output_features_path
+  type: String
+- name: output_labels_path
+  type: String
+outputs: []
+implementation:
+  container:
+    image: python:3.10
+    command: [
+      "python3", "pipeline_components/feature_engineer.py",
+      "--input_csv_path", {inputValue: input_csv_path},
+      "--output_features_path", {inputValue: output_features_path},
+      "--output_labels_path", {inputValue: output_labels_path}
+    ]

@@ -1,0 +1,16 @@
+name: Load and Clean Data
+description: Loads IMDB dataset and outputs cleaned CSV
+inputs:
+- name: input_csv_path
+  type: String
+- name: output_csv_path
+  type: String
+outputs: []
+implementation:
+  container:
+    image: python:3.10
+    command: [
+      "python3", "pipeline_components/load_and_clean.py",
+      "--input_csv_path", {inputValue: input_csv_path},
+      "--output_csv_path", {inputValue: output_csv_path}
+    ]

@@ -1,0 +1,19 @@
+name: Evaluate Model
+description: Evaluates the trained model and prints metrics
+inputs:
+- name: features_csv
+  type: String
+- name: labels_csv
+  type: String
+- name: model_path
+  type: String
+outputs: []
+implementation:
+  container:
+    image: python:3.10
+    command: [
+      "python3", "pipeline_components/evaluate_model.py",
+      "--features_csv", {inputValue: features_csv},
+      "--labels_csv", {inputValue: labels_csv},
+      "--model_path", {inputValue: model_path}
+    ]
